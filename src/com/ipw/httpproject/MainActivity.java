@@ -11,19 +11,23 @@ import java.net.URL;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 import android.view.Menu;
 
 public class MainActivity extends Activity {
 	
+	Receiver receiver;
 	
-	
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		receiver = new Receiver();
 		
 		Intent intent = new Intent(this,HTTPService.class);
 		startService(intent);
@@ -36,6 +40,38 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
+	
+	
+	@Override
+	protected void onResume(){
+		super.onResume();
+		
+		IntentFilter filterReceiver = new IntentFilter(Receiver.RECEIVER_KEY);
+		filterReceiver.addCategory(Intent.CATEGORY_DEFAULT);
+		registerReceiver(receiver,filterReceiver);
+		
+	}
+	
+	@Override
+	protected void onStop(){
+		
+		unregisterReceiver(receiver);
+		
+	}
+	
+	public class Receiver extends BroadcastReceiver{
+        
+		public static final String RECEIVER_KEY = "com.ipw.rahul.RECEIVER_KEY";
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			Log.d("RESULTFROMACTIVITY",intent.getSerializableExtra(HTTPService.KEY).toString());
+		    
+			
+		}
+		
+	}// end of Receiver
 	
 	
 
