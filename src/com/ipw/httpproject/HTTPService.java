@@ -14,10 +14,14 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.ipw.httpproject.MainActivity.Receiver;
 
@@ -27,8 +31,7 @@ import android.util.Log;
 
 public class HTTPService extends IntentService {
 	
-	private final static String PHOTOS_URL = "http://tablemate.cloudapp.net/index.php/menuitems/getphotos";
-	private final static String LOGIN_URL = "http://tablemate.cloudapp.net/index.php/site/loginviaapi";
+	
 	public static final String KEY = "com.ipw.app.KEY";
     
 	public HTTPService() {
@@ -45,7 +48,7 @@ public class HTTPService extends IntentService {
 		
 		    String result = null;
 			
-			URL url = new URL(PHOTOS_URL);
+			URL url = new URL("ENTER_URL_HERE");
 	      
 			connection = (HttpURLConnection)url.openConnection();
 			connection.setDoInput(true);
@@ -54,8 +57,8 @@ public class HTTPService extends IntentService {
 			connection.setConnectTimeout(10000);
 			
 			/*List<NameValuePair> params= new ArrayList<NameValuePair>();
-			params.add(new BasicNameValuePair("LoginForm[username]","ad9min"));
-			params.add(new BasicNameValuePair("LoginForm[password]","admin"));
+			params.add(new BasicNameValuePair("",""));
+			params.add(new BasicNameValuePair("",""));
 			
 			OutputStream outputStream = connection.getOutputStream();
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
@@ -64,38 +67,45 @@ public class HTTPService extends IntentService {
 			writer.close();
   			outputStream.close();*/
 			connection.connect();
-			
-			InputStream inputStream = (InputStream)connection.getInputStream();
-			
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-			
-			String metadata = "";
-			
-			StringBuilder stringBuilder = new StringBuilder();
-			
-			while((metadata= reader.readLine()) != null){
 				
-				stringBuilder.append(metadata); 
+			if(connection.getResponseCode() == 200){
+				
+				InputStream inputStream = (InputStream)connection.getInputStream();
+				
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+				
+				String metadata = "";
+				
+				StringBuilder stringBuilder = new StringBuilder();
+				
+				while((metadata= reader.readLine()) != null){
+					
+					stringBuilder.append(metadata); 
+				}
+				
+				reader.close();
+				inputStream.close();
+		        
+		        result = stringBuilder.toString();
+		      
+		        //Log.d("Result",result);
+		        
+		        Intent broadcastIntent = new Intent();
+		        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
+		        broadcastIntent.setAction(Receiver.RECEIVER_KEY);
+		        broadcastIntent.putExtra(KEY,jsonReader(result));
+		        sendBroadcast(broadcastIntent);
 			}
-			
-			reader.close();
-	        
-	        result = stringBuilder.toString();
-	        
-	        Log.d("Debug mode","Debug mode awesomeness");
-	        Log.v("Result",result);
-	        
-	        Intent broadcastIntent = new Intent();
-	        broadcastIntent.addCategory(Intent.CATEGORY_DEFAULT);
-	        broadcastIntent.setAction(Receiver.RECEIVER_KEY);
-	        broadcastIntent.putExtra(KEY,result);
-	        sendBroadcast(broadcastIntent);
 		}
 		catch(MalformedURLException exception){
 			
 			exception.printStackTrace();
 		}
 		catch(IOException exception){
+			
+			exception.printStackTrace();
+		}
+		catch(JSONException exception){
 			
 			exception.printStackTrace();
 		}
@@ -131,6 +141,25 @@ public class HTTPService extends IntentService {
 		}
 		
 		return result.toString();
+	}
+	
+	private ArrayList<HashMap<String,String>> jsonReader(String result) throws JSONException{
+		
+		ArrayList<HashMap<String,String>> mList = new ArrayList<HashMap<String,String>>();
+		JSONArray jsonArray = new JSONArray(result);
+		
+		int length = jsonArray.length();
+		for(int index = 0; index <length; index++){
+			
+			JSONObject jsonObject = jsonArray.getJSONObject(index);
+			
+			HashMap<String,String> map = new HashMap<String,String>();
+			map.put(jsonObject.getString("id"),jsonObject.getString("filename"));
+			
+			mList.add(map);
+		}
+		
+		return mList;
 	}
 
 }

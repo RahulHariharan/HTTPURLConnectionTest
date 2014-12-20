@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -65,10 +67,17 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			
-			Log.d("RESULTFROMACTIVITY",intent.getSerializableExtra(HTTPService.KEY).toString());
 		    
+			ArrayList<HashMap<String,String>> list = new ArrayList<HashMap<String,String>>();
 			
+			try{
+				list = (ArrayList<HashMap<String,String>>)intent.getSerializableExtra(HTTPService.KEY);
+			}
+			catch(ClassCastException exception){
+				exception.toString();
+			}
+			
+			Log.d("STRIGIFIED",list.toString());
 		}
 		
 	}// end of Receiver
